@@ -1,0 +1,4 @@
+name := beta
+prod := slib
+src := bb*.c
+pub_hdr := bb.h bb/*.h

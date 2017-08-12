@@ -1,0 +1,168 @@
+# variables affecting the script:
+# prod - product type: one of: exe (default), slib, dlib
+# name - product name
+# src - list of sources (can be a mix of c/cpp)
+# pub_hdr - list of public headers to be published (when prod is slib or dlib)
+# pub_hdr_dir - base dir for published headers (default: .)
+# t - temp build dir (defaults to _tmp)
+# o - output dir (defaults to _out)
+# exe_dir - subdirectory of $o where to put binaries (defaults to bin)
+# dlib_dir - subdirectory of $o where to put dynamic libraries (defaults to lib; for Windows targets "bin" should be used instead)
+# slib_dir - subdirectory of $o where to put static libs (defaults to lib)
+# exe_prefix
+# exe_suffix
+# obj_prefix - prefix for object files (defaults to empty)
+# obj_suffix - suffix for object files (defaults to: .o)
+# slib_prefix
+# slib_suffix
+# dlib_prefix
+# dlib_suffix
+# call exe_export,out_exe,tmp_exe: command to export the binary (defaults to: cp -f $2 $1)
+# call dlib_export,out_dlib,tmp_dlib: command to export the dlib binary (defaults to: cp -f $2 $1)
+# call slib_export,out_slib,tmp_slib: command to export the slib binary (defaults to: cp -f $2 $1)
+# AR - static library archiver
+# CC - c compiler and linker
+# MAKEDLIB - builds a dynamic library; defaults to: $(CC) -shared
+# CXX - c++ compiler and linker
+# CFLAGS - C-specific flags
+# CPPFLAGS - C/C++ preprocessor flags
+# CXXFLAGS - C++ specific flags
+# LDFLAGS - linker flags
+# LOADLIBES - linker library options (legacy)
+# LDLIBS - linker library options
+
+ifneq ($(OS),Windows_NT)
+hl_none := [0m
+hl_name := [1;35m
+hl_cfg := [1;36m
+hl_prod := [1;33m
+hl_builder := [1;32m
+endif
+exe_title := executable
+slib_title := static library
+dlib_title := dynamic library
+
+prod ?= exe
+.PHONY: default exe slib dlib
+default: $(prod)
+	@echo "$(hl_name)$(name)$(hl_none) $(hl_cfg)$(cfg)$(hl_none) $(hl_prod)$($(prod)_title)$(hl_none) built by $(hl_builder)$(builder)$(hl_none)"
+
+ifeq ($(name),)
+$(error no product name passed: n=NAME)
+endif
+
+MAKEDLIB ?= $(CC) -shared
+t ?= _tmp
+o ?= _out
+
+obj_suffix ?= .o
+
+exe_out_dir ?= bin
+
+inc_out_dir ?= include
+
+slib_out_dir ?= lib
+slib_prefix ?= lib
+slib_suffix ?= .a
+
+dlib_out_dir ?= lib
+dlib_prefix ?= lib
+dlib_suffix ?= .so
+
+exe_export ?= cp -f $2 $1
+dlib_export ?= cp -f $2 $1
+slib_export ?= cp -f $2 $1
+
+# $1: prefix, $2: item list, $3: suffix => (prefix)(item)(suffix)...
+src_derived_path = $(foreach s,$2,$1$(subst /,!,$s)$3)
+
+#obj_path = $(foreach s,$1,$t/$(obj_prefix)$(subst /,!,$s)$(obj_suffix))
+obj_path = $(call src_derived_path,$t/$(obj_prefix)$(name)-$(prod)!,$1,$(obj_suffix))
+dep_path = $(call src_derived_path,$t/$(obj_prefix)$(name)-$(prod)!,$1,.dep)
+tmp_exe_path := $t/$(exe_prefix)$(name)$(exe_suffix)
+tmp_slib_path := $t/$(slib_prefix)$(name)$(slib_suffix)
+tmp_dlib_path := $t/$(dlib_prefix)$(name)$(dlib_suffix)
+exe_dir_path := $o/$(exe_out_dir)
+slib_dir_path := $o/$(slib_out_dir)
+dlib_dir_path := $o/$(dlib_out_dir)
+inc_dir_path := $o/$(inc_out_dir)
+exe_path := $(exe_dir_path)/$(exe_prefix)$(name)$(exe_suffix)
+dlib_path := $(dlib_dir_path)/$(dlib_prefix)$(name)$(dlib_suffix)
+slib_path := $(slib_dir_path)/$(slib_prefix)$(name)$(slib_suffix)
+
+src_list := $(wildcard $(src))
+obj_list := $(call obj_path,$(src_list))
+dep_list := $(call dep_path,$(src_list))
+
+src_list[c] := $(filter %.c,$(src_list))
+obj_list[c] = $(call obj_path,$(src_list[c]))
+
+pub_hdr_dir ?= .
+pub_hdr_list := $(patsubst $(pub_hdr_dir)/%,%,$(wildcard $(patsubst %,$(pub_hdr_dir)/%,$(pub_hdr))))
+
+
+CPPFLAGS += -I$(inc_dir_path)
+LDFLAGS += $(sort -L$(slib_dir_path) -L$(dlib_dir_path))
+
+#$(info src_list[c]=$(src_list[c]))
+
+.PHONY: exe lib dlib slib
+exe: $(exe_path)
+lib: dlib slib
+dlib: $(dlib_path) $(patsubst %,$(inc_dir_path)/%,$(pub_hdr_list))
+slib: $(slib_path) $(patsubst %,$(inc_dir_path)/%,$(pub_hdr_list))
+
+.PHONY: clean
+clean:
+	-rm -f $(obj_list) $(dep_list) $(exe_path) $(tmp_exe_path)
+
+.PHONY: cleanall
+cleanall:
+	-rm -rf $t $o
+
+$(exe_path): $(tmp_exe_path) | $(exe_dir_path)
+	$(call exe_export,$(exe_path),$(tmp_exe_path))
+
+$(tmp_exe_path): $(obj_list) | $t
+	$(CC) -o $@ $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS)
+
+$(dlib_path): $(tmp_dlib_path) | $(dlib_dir_path)
+	$(call dlib_export,$(dlib_path),$(tmp_dlib_path))
+
+$(tmp_dlib_path): $(obj_list) | $t
+	$(MAKEDLIB) -o $@ $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS)
+
+$(slib_path): $(tmp_slib_path) | $(slib_dir_path)
+	$(call slib_export,$(slib_path),$(tmp_slib_path))
+
+$(tmp_slib_path): $(obj_list) | $t
+	$(AR) rcs $@ $^
+
+# $1: src
+define build_obj[c]
+$(call obj_path,$1): $1 $(call dep_path,$1) $(MAKEFILE_LIST) | $t
+	$(CC) -o $$@ -MT $$@ -MMD -MF $(call dep_path,$1)tmp $(CPPFLAGS) $(CFLAGS) -c $$<
+	@mv -f $(call dep_path,$1)tmp $(call dep_path,$1)
+
+$(call dep_path,$1): ;
+
+-include $(call dep_path,$1)
+
+endef
+
+# $1: header
+define publish_header
+
+$(inc_dir_path)/$1: $(pub_hdr_dir)/$1
+	install -m644 -Dt$(dir $(inc_dir_path)/$1) $$<
+
+
+endef
+
+$(eval $(foreach s,$(src_list[c]),$(call build_obj[c],$s)))
+$(eval $(foreach h,$(pub_hdr_list),$(call publish_header,$h)))
+
+$(sort $t $o $(exe_dir_path) $(slib_dir_path) $(dlib_dir_path)):
+	mkdir -p $@
+
+# vim: set ft=make :

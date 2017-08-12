@@ -1,0 +1,5 @@
+name := epsilon
+prod := exe
+src := *.c
+
+LDLIBS := -lalpha -lbeta -lgamma

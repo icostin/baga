@@ -1,0 +1,5 @@
+name := gamma
+prod := dlib
+src := cc*.c
+pub_hdr := gamma.h
+

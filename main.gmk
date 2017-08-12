@@ -1,0 +1,81 @@
+.PHONY: default clean cleanall
+
+default: build
+
+# identify directory with baga files
+baga_dir := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+$(and $(verbose),$(info baga dir: $(baga_dir)))
+
+# auto-detect user and host names
+ifeq ($(OS),Windows_NT)
+user := $(USERNAME)
+host := $(USERDOMAIN)
+else
+user := $(USER)
+host := $(shell uname -n)
+endif
+
+# identify the workspace file to use
+ws ?= $(or $(workspace),$(wildcard ./baga-workspace-$(user)-$(host).mk),$(wildcard ./baga-workspace.mk),$(wildcard ../baga-workspace-$(user)-$(host).mk),$(wildcard ../baga-workspace.mk),$(wildcard ../../baga-workspace-$(user)-$(host).mk),$(wildcard ../../baga-workspace.mk),$(wildcard ../../../baga-workspace-$(user)-$(host).mk),$(wildcard ../../../baga-workspace.mk),$(baga_dir)/default-workspace.mk)
+$(and $(verbose),$(info workspace file: $(ws)))
+
+ws_dir := $(abspath $(dir $(ws)))
+$(and $(verbose),$(info workspace dir: $(ws_dir)))
+
+# load the workspace
+b := $(baga_dir)
+w := $(ws_dir)
+include $(ws)
+tmp_root ?= _tmp
+out_root ?= _out
+
+# determine builders
+bld ?= $(default_builders)
+bld_path_list := $(sort $(foreach b,$(bld),$(or $(wildcard $b $b.mk $(BAGA_BUILDER_DIR)/$b.mk $(baga_dir)/bld/$b.mk),$(error missing builder: $b))))
+
+$(and $(verbose),$(info builder path list: $(bld_path_list)))
+
+
+# determine projects to process
+ifeq ($(prj),)
+prj_path_list := $(or $(default_prj_path_list),$(wildcard *.baga */*.baga */*/*.baga))
+else
+prj_path_list := $(patsubst %,%.baga,$(prj))
+endif
+prj_path_list := $(sort $(prj_path_list))
+$(and $(verbose),$(info project path list: $(prj_path_list)))
+
+# determine configurations to process
+cfg_list := $(or $(cfg),$(default_configs),debug release)
+cfg_list := $(sort $(cfg_list))
+$(and $(verbose),$(info config list: $(cfg_list)))
+
+# 1:prj, 2:config, 3:builder
+define build_project
+
+.PHONY: build--$1--$2--$3 clean--$1--$2--$3
+build--$1--$2--$3: $(patsubst %,build--%--$2--$3,$(dep[$1]))
+	@$(MAKE) --no-print-directory -f $(baga_dir)/build.gmk -C $(dir $1) baga_project=$(notdir $1) cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) $(and $(verbose),verbose=$(verbose))
+
+clean--$1--$2--$3:
+	@$(MAKE) --no-print-directory -f $(baga_dir)/build.gmk -C $(dir $1) baga_project=$(notdir $1) cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) clean
+
+
+endef
+
+
+$(eval $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),$(call build_project,$p,$c,$b)))))
+$(and $(verbose),$(info build: $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),build--$p--$c--$b)))))
+
+build: $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),build--$p--$c--$b)))
+	@echo build done
+
+clean: $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),clean--$p--$c--$b)))
+	@echo cleaned
+
+cleanall:
+	-rm -rf $(out_root) $(tmp_root)
+	@echo everything cleaned
+
+
+# vim: set ft=make :

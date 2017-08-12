@@ -1,0 +1,5 @@
+#!/bin/sh
+BAGA=${BAGA-`dirname $0`/../lib/baga}
+[ -z "$verbose" ] || echo baga dir: $BAGA
+[ -z "$verbose" ] || echo make -f $BAGA/main.gmk "$@"
+nice -n10 make -f $BAGA/main.gmk "$@"

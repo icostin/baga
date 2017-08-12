@@ -1,0 +1,6 @@
+name := alpha
+prod := slib
+src := src/*.c
+pub_hdr_dir := include
+pub_hdr := aa.h aa/*.h
+
