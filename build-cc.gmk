@@ -154,7 +154,7 @@ endef
 define publish_header
 
 $(inc_dir_path)/$1: $(pub_hdr_dir)/$1
-	install -m644 -Dt$(dir $(inc_dir_path)/$1) $$<
+	install -m444 -Dt$(dir $(inc_dir_path)/$1) $$<
 
 
 endef
