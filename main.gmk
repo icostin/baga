@@ -36,6 +36,32 @@ bld_path_list := $(sort $(foreach b,$(bld),$(or $(wildcard $b $b.mk $(BAGA_BUILD
 $(and $(verbose),$(info BAGA_BUILDER_DIR: $(BAGA_BUILDER_DIR)))
 $(and $(verbose),$(info builder path list: $(bld_path_list)))
 
+# load dependency files
+define set_dep
+
+dep[$1$2] += $1$3
+
+endef
+
+define process_dep
+
+$(info process_dep: $1,$2,$3)
+$(eval $(call set_dep,$1,$2,$3))
+$(info $(call set_dep,$1,$2,$3))
+
+endef
+
+define process_dep_file
+
+dep :=
+$(eval include $1)
+$(and $(verbose),$(info deps from $1: $(dep)))
+$(eval $(foreach d,$(dep),$(call process_dep,$(patsubst ./%,%,$(dir $1)),$(firstword $(subst :, ,$d)).baga,$(lastword $(subst :, ,$d)).baga)))
+
+endef
+
+$(foreach f,$(wildcard *.baga_dep */*.baga_dep */*/*.baga_dep),$(eval $(call process_dep_file,$f)))
+
 
 # determine projects to process
 ifeq ($(prj),)
@@ -66,7 +92,8 @@ endef
 
 
 $(eval $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),$(call build_project,$p,$c,$b)))))
-$(and $(verbose),$(info build: $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),build--$p--$c--$b)))))
+$(and $(verbose),$(info $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),$(call build_project,$p,$c,$b))))))
+#$(and $(verbose),$(info build: $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),build--$p--$c--$b)))))
 
 build: $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),build--$p--$c--$b)))
 	@echo build done
