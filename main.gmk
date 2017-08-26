@@ -45,9 +45,9 @@ endef
 
 define process_dep
 
-$(info process_dep: $1,$2,$3)
+$(and $(verbose),$(info process_dep: $1,$2,$3))
 $(eval $(call set_dep,$1,$2,$3))
-$(info $(call set_dep,$1,$2,$3))
+$(and $(verbose),$(info $(call set_dep,$1,$2,$3)))
 
 endef
 
