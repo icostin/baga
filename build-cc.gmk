@@ -90,16 +90,21 @@ exe_path := $(exe_dir_path)/$(exe_prefix)$(name)$(exe_suffix)
 dlib_path := $(dlib_dir_path)/$(dlib_prefix)$(name)$(dlib_suffix)
 slib_path := $(slib_dir_path)/$(slib_prefix)$(name)$(slib_suffix)
 
-src_list := $(wildcard $(src))
+$(and $(verbose),$(info original src: $(src)))
+
+p := $(dir $(baga_project))
+$(and $(verbose),$(info project dir: $p))
+src_list := $(patsubst ./%,%,$(wildcard $(patsubst %,$p%,$(src))))
+$(and $(verbose),$(info src_list: $(src_list)))
+
 obj_list := $(call obj_path,$(src_list))
 dep_list := $(call dep_path,$(src_list))
 
 src_list[c] := $(filter %.c,$(src_list))
 obj_list[c] = $(call obj_path,$(src_list[c]))
 
-pub_hdr_dir ?= .
+pub_hdr_dir := $p$(pub_hdr_dir)
 pub_hdr_list := $(patsubst $(pub_hdr_dir)/%,%,$(wildcard $(patsubst %,$(pub_hdr_dir)/%,$(pub_hdr))))
-
 
 CPPFLAGS += -I$(inc_dir_path)
 LDFLAGS += $(sort -L$(slib_dir_path) -L$(dlib_dir_path))

@@ -1,12 +1,13 @@
 # variables:
 
-# prj: project file
-# bld: builder file
+# baga_project: project file
+# baga_builder: builder file
 # cfg: config name
 # out_root
 # tmp_root
 
 baga_dir := $(dir $(lastword $(MAKEFILE_LIST)))
+
 b := $(baga_dir)
 
 out_root ?= _out

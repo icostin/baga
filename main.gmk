@@ -2,6 +2,8 @@
 
 default: build
 
+cmd_pfx := $(if $(verbose),,@)
+
 # identify directory with baga files
 baga_dir := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 $(and $(verbose),$(info baga dir: $(baga_dir)))
@@ -16,11 +18,19 @@ host := $(shell uname -n)
 endif
 
 # identify the workspace file to use
-ws ?= $(or $(workspace),$(wildcard ./baga-workspace-$(user)@$(host).mk),$(wildcard ./baga-workspace.mk),$(wildcard ../baga-workspace-$(user)@$(host).mk),$(wildcard ../baga-workspace.mk),$(wildcard ../../baga-workspace-$(user)@$(host).mk),$(wildcard ../../baga-workspace.mk),$(wildcard ../../../baga-workspace-$(user)@$(host).mk),$(wildcard ../../../baga-workspace.mk),$(baga_dir)/default-workspace.mk)
+ws ?= $(or $(workspace),$(wildcard ./baga-workspace-$(user)@$(host).mk),$(wildcard ./baga-workspace.mk),$(wildcard ../baga-workspace-$(user)@$(host).mk),$(wildcard ../baga-workspace.mk),$(wildcard ../../baga-workspace-$(user)@$(host).mk),$(wildcard ../../baga-workspace.mk),$(wildcard ../../../baga-workspace-$(user)@$(host).mk),$(wildcard ../../../baga-workspace.mk))
 $(and $(verbose),$(info workspace file: $(ws)))
 
+ifeq ($(ws),)
+ws_dir := ./
+ws := $(baga_dir)/default-workspace.mk
+else
 ws_dir := $(abspath $(dir $(ws)))
+endif
 $(and $(verbose),$(info workspace dir: $(ws_dir)))
+
+crt_from_ws_dir := $(patsubst $(abspath $(ws_dir))/%,%,$(abspath .))
+$(abs $(verbose),$(info crt_from_ws_dir: $(crt_from_ws_dir)))
 
 # load the workspace
 b := $(baga_dir)
@@ -82,10 +92,10 @@ define build_project
 
 .PHONY: build--$1--$2--$3 clean--$1--$2--$3
 build--$1--$2--$3: $(patsubst %,build--%--$2--$3,$(dep[$1]))
-	@$(MAKE) --no-print-directory -f $(baga_dir)/build.gmk -C $(dir $1) baga_project=$(notdir $1) cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) $(and $(verbose),verbose=$(verbose))
+	$(cmd_pfx)$(MAKE) --no-print-directory -C $(ws_dir) -f $(baga_dir)/build.gmk baga_project=$(crt_from_ws_dir)/$1 cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) $(and $(verbose),verbose=$(verbose))
 
 clean--$1--$2--$3:
-	@$(MAKE) --no-print-directory -f $(baga_dir)/build.gmk -C $(dir $1) baga_project=$(notdir $1) cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) clean
+	$(cmd_pfx)$(MAKE) --no-print-directory -C $(ws_dir) -f $(baga_dir)/build.gmk baga_project=$1 cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) clean
 
 
 endef
