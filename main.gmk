@@ -30,7 +30,7 @@ endif
 $(and $(verbose),$(info workspace dir: $(ws_dir)))
 
 crt_from_ws_dir := $(patsubst $(abspath $(ws_dir))/%,%,$(abspath .))
-$(abs $(verbose),$(info crt_from_ws_dir: $(crt_from_ws_dir)))
+$(and $(verbose),$(info crt_from_ws_dir: $(crt_from_ws_dir)))
 
 # load the workspace
 b := $(baga_dir)
@@ -92,10 +92,10 @@ define build_project
 
 .PHONY: build--$1--$2--$3 clean--$1--$2--$3
 build--$1--$2--$3: $(patsubst %,build--%--$2--$3,$(dep[$1]))
-	$(cmd_pfx)$(MAKE) --no-print-directory -C $(ws_dir) -f $(baga_dir)/build.gmk baga_project=$(crt_from_ws_dir)/$1 cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) $(and $(verbose),verbose=$(verbose))
+	$(cmd_pfx)$(MAKE) --no-print-directory -C $(dir $1) -f $(baga_dir)/build.gmk baga_project=$(notdir $1) cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) $(and $(verbose),verbose=$(verbose))
 
 clean--$1--$2--$3:
-	$(cmd_pfx)$(MAKE) --no-print-directory -C $(ws_dir) -f $(baga_dir)/build.gmk baga_project=$1 cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) clean
+	$(cmd_pfx)$(MAKE) --no-print-directory -C $(dir $1) -f $(baga_dir)/build.gmk baga_project=$(notdir $1) cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) clean
 
 
 endef
