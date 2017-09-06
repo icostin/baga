@@ -41,7 +41,7 @@ out_root ?= _out
 
 # determine builders
 bld ?= $(default_builders)
-bld_path_list := $(sort $(foreach b,$(bld),$(or $(wildcard $b $b.mk $(BAGA_BUILDER_DIR)/$b.mk $(baga_dir)/bld/$b.mk),$(error missing builder: $b))))
+bld_path_list := $(sort $(foreach b,$(bld),$(or $(firstword $(wildcard $b $b.mk $(BAGA_BUILDER_DIR)/$b.mk $(baga_dir)/bld/$b.mk)),$(error missing builder: $b))))
 
 $(and $(verbose),$(info BAGA_BUILDER_DIR: $(BAGA_BUILDER_DIR)))
 $(and $(verbose),$(info builder path list: $(bld_path_list)))
