@@ -87,8 +87,18 @@ cfg_list := $(or $(cfg),$(default_configs),debug release)
 cfg_list := $(sort $(cfg_list))
 $(and $(verbose),$(info config list: $(cfg_list)))
 
+define fake_dep_targets
+
+.PHONY: build--$1--$2--$3 clean--$1--$2--$3
+build--$1--$2--$3: ;
+clean--$1--$2--$3: ;
+
+endef
+
 # 1:prj, 2:config, 3:builder
 define build_project
+
+$(foreach p,$(dep[$1]),$(call fake_dep_targets,$p,$2,$3))
 
 .PHONY: build--$1--$2--$3 clean--$1--$2--$3
 build--$1--$2--$3: $(patsubst %,build--%--$2--$3,$(dep[$1]))
@@ -99,7 +109,6 @@ clean--$1--$2--$3:
 
 
 endef
-
 
 $(eval $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),$(call build_project,$p,$c,$b)))))
 $(and $(verbose),$(info $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),$(call build_project,$p,$c,$b))))))
