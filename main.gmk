@@ -98,8 +98,6 @@ endef
 # 1:prj, 2:config, 3:builder
 define build_project
 
-$(foreach p,$(dep[$1]),$(call fake_dep_targets,$p,$2,$3))
-
 .PHONY: build--$1--$2--$3 clean--$1--$2--$3
 build--$1--$2--$3: $(patsubst %,build--%--$2--$3,$(dep[$1]))
 	$(cmd_pfx)$(MAKE) -C $(dir $1) -f $(baga_dir)/build.gmk baga_project=$(notdir $1) cfg=$2 baga_builder=$3 tmp_root=$(abspath $(tmp_root)) out_root=$(abspath $(out_root)) $(and $(verbose),verbose=$(verbose))
@@ -110,8 +108,12 @@ clean--$1--$2--$3:
 
 endef
 
+missing_dep_prj_list := $(sort $(filter-out $(prj_path_list),$(foreach p,$(prj_path_list),$(dep[$p]))))
+$(and $(verbose),$(info missing_dep_prj_list: $(missing_dep_prj_list)))
+
+$(eval $(foreach p,$(missing_dep_prj_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),$(call fake_dep_targets,$p,$c,$b)))))
 $(eval $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),$(call build_project,$p,$c,$b)))))
-$(and $(verbose),$(info $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),$(call build_project,$p,$c,$b))))))
+#$(and $(verbose),$(info $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),$(call build_project,$p,$c,$b))))))
 #$(and $(verbose),$(info build: $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),build--$p--$c--$b)))))
 
 build: $(foreach p,$(prj_path_list),$(foreach c,$(cfg_list),$(foreach b,$(bld_path_list),build--$p--$c--$b)))
