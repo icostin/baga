@@ -6,9 +6,9 @@
 # pub_hdr_dir - base dir for published headers (default: .)
 # t - temp build dir (defaults to _tmp)
 # o - output dir (defaults to _out)
-# exe_dir - subdirectory of $o where to put binaries (defaults to bin)
-# dlib_dir - subdirectory of $o where to put dynamic libraries (defaults to lib; for Windows targets "bin" should be used instead)
-# slib_dir - subdirectory of $o where to put static libs (defaults to lib)
+# exe_out_dir - subdirectory of $o where to put binaries (defaults to bin)
+# dlib_out_dir - subdirectory of $o where to put dynamic libraries (defaults to lib; for Windows targets "bin" should be used instead)
+# slib_out_dir - subdirectory of $o where to put static libs (defaults to lib)
 # exe_prefix
 # exe_suffix
 # obj_prefix - prefix for object files (defaults to empty)
