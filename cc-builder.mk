@@ -1,10 +1,11 @@
 bld_mode := cc
+feat_list += cc
 
 CC := $p$(or $(cc_name),cc)
 CXX := $p$(or $(cxx_name),c++)
 AR := $p$(or $(ar_name),ar)
 CFLAGS ?= -fPIC
-CXXFLAGS ?= -PIC
+CXXFLAGS ?= -fPIC
 
 target := $(shell $(CC) -dumpmachine)
 t ?= $(tmp_root)/$(target)-$(builder)-$(cfg)

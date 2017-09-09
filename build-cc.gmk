@@ -125,17 +125,21 @@ clean:
 cleanall:
 	-rm -rf $t $o
 
+# $1: root var, $2: src
+build_flags_root = $($1) $($1[$2]) $($1[$(cfg)]) $($1[$(cfg)][$2]) $(foreach f,$(feat_list),$($1[$f]) $($1[$f][$2]) $($1[$f-$(cfg)]) $($1[$f-$(cfg)][$2]))
+build_flags = $(filter-out $(foreach v,$1,$(call build_flags_root,exclude-$v,$2)),$(foreach v,$1,$(call build_flags_root,$v,$2)))
+
 $(exe_path): $(tmp_exe_path) | $(exe_dir_path)
 	$(call exe_export,$(exe_path),$(tmp_exe_path))
 
 $(tmp_exe_path): $(obj_list) | $t
-	$(CC) -o $@ $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS)
+	$(CC) -o $@ $(call build_flags,LDFLAGS ldflags) $^ $(LOADLIBES) $(LDLIBS)
 
 $(dlib_path): $(tmp_dlib_path) | $(dlib_dir_path)
 	$(call dlib_export,$(dlib_path),$(tmp_dlib_path))
 
 $(tmp_dlib_path): $(obj_list) | $t
-	$(MAKEDLIB) -o $@ $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS)
+	$(MAKEDLIB) -o $@ $(call build_flags,LDFLAGS ldflags) $^ $(LOADLIBES) $(LDLIBS)
 
 $(slib_path): $(tmp_slib_path) | $(slib_dir_path)
 	$(call slib_export,$(slib_path),$(tmp_slib_path))
@@ -146,7 +150,7 @@ $(tmp_slib_path): $(obj_list) | $t
 # $1: src
 define build_obj[c]
 $(call obj_path,$1): $1 $(call dep_path,$1) $(MAKEFILE_LIST) | $t
-	$(CC) -o $$@ -MT $$@ -MMD -MF $(call dep_path,$1)tmp $(CPPFLAGS) $(CFLAGS) -c $$<
+	$(CC) -o $$@ -MT $$@ -MMD -MF $(call dep_path,$1)tmp $(call build_flags,CPPFLAGS cppflags CFLAGS cflags,$1) -c $$<
 	@mv -f $(call dep_path,$1)tmp $(call dep_path,$1)
 
 $(call dep_path,$1): ;
@@ -164,6 +168,7 @@ $(inc_dir_path)/$1: $(pub_hdr_dir)/$1
 
 endef
 
+$(and $(verbose),$(info $(foreach s,$(src_list[c]),$(call build_obj[c],$s))))
 $(eval $(foreach s,$(src_list[c]),$(call build_obj[c],$s)))
 $(eval $(foreach h,$(pub_hdr_list),$(call publish_header,$h)))
 
