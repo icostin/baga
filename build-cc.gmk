@@ -49,7 +49,7 @@ cmd_vis := $(and $(hide_cmds),@)
 prod ?= exe
 .PHONY: default exe slib dlib
 default: $(prod)
-	@echo "$(hl_name)$(name)$(hl_none) $(hl_cfg)$(cfg)$(hl_none) $(hl_prod)$($(prod)_title)$(hl_none): $(hl_builder)$(builder)$(hl_none): $(hl_act)built$(hl_none)"
+	@echo "$(hl_name)$(name)$(hl_none) $(hl_cfg)$(cfg)$(hl_none) $(hl_prod)$($(prod)_title)$(hl_none) $(hl_builder)$(builder)$(hl_none): $(hl_act)built$(hl_none)"
 
 ifeq ($(name),)
 $(error no product name passed: n=NAME)
