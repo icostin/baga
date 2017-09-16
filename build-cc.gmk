@@ -171,7 +171,8 @@ endef
 define publish_header
 
 $(inc_dir_path)/$1: $(pub_hdr_dir)/$1
-	install -m444 -Dt$(dir $(inc_dir_path)/$1) $$<
+	@echo "$(name) $(cfg) $($(prod)_title) $(builder): $(hl_act)publishing header$(hl_none) $(hl_src)$1$(hl_none)"
+	$(cmd_vis)install -m444 -Dt$(dir $(inc_dir_path)/$1) $$<
 
 
 endef
