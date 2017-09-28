@@ -107,13 +107,17 @@ dep_list := $(call dep_path,$(src_list))
 src_list[c] := $(filter %.c,$(src_list))
 obj_list[c] = $(call obj_path,$(src_list[c]))
 
+src_list[cxx] := $(filter %.cpp,$(src_list))
+obj_list[cxx] = $(call obj_path,$(src_list[cxx]))
+
 pub_hdr_dir := $p$(pub_hdr_dir)
 pub_hdr_list := $(patsubst $(pub_hdr_dir)/%,%,$(wildcard $(patsubst %,$(pub_hdr_dir)/%,$(pub_hdr))))
 
 CPPFLAGS += -I$(inc_dir_path)
 LDFLAGS += $(sort -L$(slib_dir_path) -L$(dlib_dir_path))
 
-#$(info src_list[c]=$(src_list[c]))
+$(info src_list[c]=$(src_list[c]))
+$(info src_list[cxx]=$(src_list[cxx]))
 
 .PHONY: exe lib dlib slib
 exe: $(exe_path)
@@ -153,12 +157,12 @@ $(slib_path): $(tmp_slib_path) | $(slib_dir_path)
 $(tmp_slib_path): $(obj_list) | $t
 	$(cmd_vis)$(AR) rcs $@ $^
 
-# $1: src
-define build_obj[c]
+# $1: src, $2: compiler, $3: flags
+define build_obj
 $(call obj_path,$1): $1 $(call dep_path,$1) $(MAKEFILE_LIST) | $t
 	@echo "$(name) $(cfg) $($(prod)_title) $(builder): $(hl_act)compiling$(hl_none) $(hl_src)$1$(hl_none)"
 
-	$(cmd_vis)$(CC) -o $$@ -MT $$@ -MMD -MF $(call dep_path,$1)tmp $(call build_flags,CPPFLAGS cppflags CFLAGS cflags,$1) -c $$<
+	$(cmd_vis)$2 -o $$@ -MT $$@ -MMD -MF $(call dep_path,$1)tmp $(call build_flags,$3,$1) -c $$<
 	@mv -f $(call dep_path,$1)tmp $(call dep_path,$1)
 
 $(call dep_path,$1): ;
@@ -177,8 +181,12 @@ $(inc_dir_path)/$1: $(pub_hdr_dir)/$1
 
 endef
 
-$(and $(verbose),$(info $(foreach s,$(src_list[c]),$(call build_obj[c],$s))))
-$(eval $(foreach s,$(src_list[c]),$(call build_obj[c],$s)))
+$(and $(verbose),$(info $(foreach s,$(src_list[c]),$(call build_obj,$s,$(CC),CPPFLAGS cppflags CFLAGS cflags))))
+$(eval $(foreach s,$(src_list[c]),$(call build_obj,$s,$(CC),CPPFLAGS cppflags CFLAGS cflags)))
+
+$(and $(verbose),$(info $(foreach s,$(src_list[cxx]),$(call build_obj,$s,$(CXX),CPPFLAGS cppflags CXXFLAGS cxxflags))))
+$(eval $(foreach s,$(src_list[cxx]),$(call build_obj,$s,$(CXX),CPPFLAGS cppflags CXXFLAGS cxxflags)))
+
 $(eval $(foreach h,$(pub_hdr_list),$(call publish_header,$h)))
 
 $(sort $t $o $(exe_dir_path) $(slib_dir_path) $(dlib_dir_path)):
