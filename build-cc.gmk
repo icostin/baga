@@ -116,8 +116,8 @@ pub_hdr_list := $(patsubst $(pub_hdr_dir)/%,%,$(wildcard $(patsubst %,$(pub_hdr_
 CPPFLAGS += -I$(inc_dir_path)
 LDFLAGS += $(sort -L$(slib_dir_path) -L$(dlib_dir_path))
 
-$(info src_list[c]=$(src_list[c]))
-$(info src_list[cxx]=$(src_list[cxx]))
+$(and $(verbose),$(info src_list[c]=$(src_list[c])))
+$(and $(verbose),$(info src_list[cxx]=$(src_list[cxx])))
 
 .PHONY: exe lib dlib slib
 exe: $(exe_path)
