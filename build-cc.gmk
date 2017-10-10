@@ -143,13 +143,13 @@ $(exe_path): $(tmp_exe_path) | $(exe_dir_path)
 
 $(tmp_exe_path): $(obj_list) | $t
 	@echo "$(name) $(cfg) $($(prod)_title) $(builder): $(hl_act)linking$(hl_none)"
-	$(cmd_vis)$(CC) -o $@ $(call build_flags,LDFLAGS ldflags) $^ $(LOADLIBES) $(LDLIBS)
+	$(cmd_vis)$(CC) -o $@ $(call build_flags,LDFLAGS ldflags) $^ $(call build_flags,LOADLIBES loadlibes LDLIBS ldlibs)
 
 $(dlib_path): $(tmp_dlib_path) | $(dlib_dir_path)
 	$(cmd_vis)$(call dlib_export,$(dlib_path),$(tmp_dlib_path))
 
 $(tmp_dlib_path): $(obj_list) | $t
-	$(cmd_vis)$(MAKEDLIB) -o $@ $(call build_flags,LDFLAGS ldflags) $^ $(LOADLIBES) $(LDLIBS)
+	$(cmd_vis)$(MAKEDLIB) -o $@ $(call build_flags,LDFLAGS ldflags) $^ $(call build_flags,LOADLIBES loadlibes LDLIBS ldlibs)
 
 $(slib_path): $(tmp_slib_path) | $(slib_dir_path)
 	$(cmd_vis)$(call slib_export,$(slib_path),$(tmp_slib_path))

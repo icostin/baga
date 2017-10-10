@@ -7,14 +7,13 @@ cc_name := gcc
 cxx_name := g++
 
 exe_suffix := .exe
-dlib_out_dir := bin
 dlib_prefix :=
 dlib_suffix := .dll
 
 define dlib_export
-	mkdir -p $(dir $1)../lib
-	cp -f $2 $1
-	cp -f $2.a $(dir $1)../lib/$(notdir $1).a
+	$(cmd_vis)mkdir -p $(dir $1)../bin
+	$(cmd_vis)cp -f $2 $(dir $1)../bin/$(notdir $1)
+	$(cmd_vis)cp -f $2.a $1.a
 endef
 
 CFLAGS :=
