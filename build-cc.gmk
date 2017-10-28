@@ -116,6 +116,8 @@ pub_hdr_list := $(patsubst $(pub_hdr_dir)/%,%,$(wildcard $(patsubst %,$(pub_hdr_
 CPPFLAGS += -I$(inc_dir_path)
 LDFLAGS += $(sort -L$(slib_dir_path) -L$(dlib_dir_path))
 
+
+$(and $(verbose),$(info obj_list=$(obj_list)))
 $(and $(verbose),$(info src_list[c]=$(src_list[c])))
 $(and $(verbose),$(info src_list[cxx]=$(src_list[cxx])))
 
@@ -137,19 +139,22 @@ cleanall:
 build_flags_root = $($1) $($1[$2]) $($1[$(cfg)]) $($1[$(cfg)][$2]) $(foreach f,$(feat_list),$($1[$f]) $($1[$f][$2]) $($1[$f-$(cfg)]) $($1[$f-$(cfg)][$2]))
 build_flags = $(filter-out $(foreach v,$1,$(call build_flags_root,exclude-$v,$2)),$(foreach v,$1,$(call build_flags_root,$v,$2)))
 
+dep_lib_files := $(wildcard $(foreach l,$(patsubst -l%,%,$(filter -l%,$(call build_flags,LOADLIBES loadlibes LDLIBS ldlibs))),$(dlib_dir_path)/$(dlib_prefix)$l$(dlib_suffix) $(slib_dir_path)/$(slib_prefix)$l$(slib_suffix)))
+$(and $(verbose),$(info dep_lib_files=$(dep_lib_files)))
+
 $(exe_path): $(tmp_exe_path) | $(exe_dir_path)
 	@echo "$(name) $(cfg) $($(prod)_title) $(builder): $(hl_act)exporting library$(hl_none)"
 	$(cmd_vis)$(call exe_export,$(exe_path),$(tmp_exe_path))
 
-$(tmp_exe_path): $(obj_list) | $t
+$(tmp_exe_path): $(obj_list) $(dep_lib_files) | $t
 	@echo "$(name) $(cfg) $($(prod)_title) $(builder): $(hl_act)linking$(hl_none)"
-	$(cmd_vis)$(CC) -o $@ $(call build_flags,LDFLAGS ldflags) $^ $(call build_flags,LOADLIBES loadlibes LDLIBS ldlibs)
+	$(cmd_vis)$(CC) -o $@ $(call build_flags,LDFLAGS ldflags) $(obj_list) $(call build_flags,LOADLIBES loadlibes LDLIBS ldlibs)
 
 $(dlib_path): $(tmp_dlib_path) | $(dlib_dir_path)
 	$(cmd_vis)$(call dlib_export,$(dlib_path),$(tmp_dlib_path))
 
-$(tmp_dlib_path): $(obj_list) | $t
-	$(cmd_vis)$(MAKEDLIB) -o $@ $(call build_flags,LDFLAGS ldflags) $^ $(call build_flags,LOADLIBES loadlibes LDLIBS ldlibs)
+$(tmp_dlib_path): $(obj_list) $(dep_lib_files) | $t
+	$(cmd_vis)$(MAKEDLIB) -o $@ $(call build_flags,LDFLAGS ldflags) $(obj_list) $(call build_flags,LOADLIBES loadlibes LDLIBS ldlibs)
 
 $(slib_path): $(tmp_slib_path) | $(slib_dir_path)
 	$(cmd_vis)$(call slib_export,$(slib_path),$(tmp_slib_path))
