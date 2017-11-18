@@ -143,7 +143,7 @@ dep_lib_files := $(wildcard $(foreach l,$(patsubst -l%,%,$(filter -l%,$(call bui
 $(and $(verbose),$(info dep_lib_files=$(dep_lib_files)))
 
 $(exe_path): $(tmp_exe_path) | $(exe_dir_path)
-	@echo "$(name) $(cfg) $($(prod)_title) $(builder): $(hl_act)exporting library$(hl_none)"
+	@echo "$(name) $(cfg) $($(prod)_title) $(builder): $(hl_act)exporting executable$(hl_none)"
 	$(cmd_vis)$(call exe_export,$(exe_path),$(tmp_exe_path))
 
 $(tmp_exe_path): $(obj_list) $(dep_lib_files) | $t
@@ -151,12 +151,14 @@ $(tmp_exe_path): $(obj_list) $(dep_lib_files) | $t
 	$(cmd_vis)$(CC) -o $@ $(call build_flags,LDFLAGS ldflags) $(obj_list) $(call build_flags,LOADLIBES loadlibes LDLIBS ldlibs)
 
 $(dlib_path): $(tmp_dlib_path) | $(dlib_dir_path)
+	@echo "$(name) $(cfg) $($(prod)_title) $(builder): $(hl_act)exporting dynamic library$(hl_none)"
 	$(cmd_vis)$(call dlib_export,$(dlib_path),$(tmp_dlib_path))
 
 $(tmp_dlib_path): $(obj_list) $(dep_lib_files) | $t
 	$(cmd_vis)$(MAKEDLIB) -o $@ $(call build_flags,LDFLAGS ldflags) $(obj_list) $(call build_flags,LOADLIBES loadlibes LDLIBS ldlibs)
 
 $(slib_path): $(tmp_slib_path) | $(slib_dir_path)
+	@echo "$(name) $(cfg) $($(prod)_title) $(builder): $(hl_act)exporting static library$(hl_none)"
 	$(cmd_vis)$(call slib_export,$(slib_path),$(tmp_slib_path))
 
 $(tmp_slib_path): $(obj_list) | $t

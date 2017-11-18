@@ -10,11 +10,7 @@ exe_suffix := .exe
 dlib_prefix :=
 dlib_suffix := .dll
 
-define dlib_export
-	$(cmd_vis)mkdir -p $(dir $1)../bin
-	$(cmd_vis)cp -f $2 $(dir $1)../bin/$(notdir $1)
-	$(cmd_vis)cp -f $2.a $1.a
-endef
+dlib_export=mkdir -p $(dir $1)../bin && cp -f $2 $(dir $1)../bin/$(notdir $1) && cp -f $2.a $1.a
 
 CFLAGS :=
 CXXFLAGS :=
