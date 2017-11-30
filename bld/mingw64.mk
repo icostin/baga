@@ -9,8 +9,9 @@ cxx_name := g++
 exe_suffix := .exe
 dlib_prefix :=
 dlib_suffix := .dll
+dlib_out_dir := bin
 
-dlib_export=mkdir -p $(dir $1)../bin && cp -f $2 $(dir $1)../bin/$(notdir $1) && cp -f $2.a $1.a
+dlib_export=mkdir -p $(dir $1)../lib && cp -f $2 $1 && cp -f $2.a $(dir $1)../bin/$(notdir $1).a
 
 CFLAGS :=
 CXXFLAGS :=
