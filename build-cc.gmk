@@ -166,11 +166,12 @@ $(tmp_slib_path): $(obj_list) | $t
 
 # $1: src, $2: compiler, $3: flags
 define build_obj
+
 $(call obj_path,$1): $1 $(call dep_path,$1) $(MAKEFILE_LIST) | $t
 	@echo "$(name) $(cfg) $($(prod)_title) $(builder): $(hl_act)compiling$(hl_none) $(hl_src)$1$(hl_none)"
-
 	$(cmd_vis)$2 -o $$@ -MT $$@ -MMD -MF $(call dep_path,$1)tmp $(call build_flags,$3,$1) -c $$<
 	@mv -f $(call dep_path,$1)tmp $(call dep_path,$1)
+	@touch $$@
 
 $(call dep_path,$1): ;
 
