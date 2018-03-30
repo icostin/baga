@@ -31,7 +31,7 @@
 # LOADLIBES - linker library options (legacy)
 # LDLIBS - linker library options
 
-ifneq ($(OS),Windows_NT)
+ifneq ($(hl),)
 hl_none := [0m
 hl_name := [1;35m
 hl_cfg := [1;33m

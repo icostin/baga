@@ -1,4 +1,4 @@
 #!/bin/sh
 BAGA=${BAGA-`dirname $0`/../lib/baga}
 [ -z "$verbose" ] || echo baga dir: $BAGA
-nice -n10 make hide_cmds=1 -j --no-print-directory -f $BAGA/main.gmk "$@" || ( echo "[1;31m\n\n****************************************\n* FAILED * rebuild non-parallelized... *\n****************************************[0m\n" && nice -n10 make -f $BAGA/main.gmk "$@" )
+nice -n10 make hide_cmds=1 hl=1 -j --no-print-directory -f $BAGA/main.gmk "$@" || ( echo "[1;31m\n\n****************************************\n* FAILED * rebuild non-parallelized... *\n****************************************[0m\n" && nice -n10 make hl=1 -f $BAGA/main.gmk "$@" )
